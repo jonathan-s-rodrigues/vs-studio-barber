@@ -15,6 +15,6 @@ const FIREBASE_CONFIG = {
 const SHOP = {
   name: "VS Studio Barbearia",
   whatsapp: "5511947741002",
-  address: "Endereço da barbearia",
+  address: "Rua José Veloso da Silva, 487 - Parque Rodrigo Barreto, Arujá - SP, 07417-375",
   timezone: "America/Sao_Paulo"
 };
