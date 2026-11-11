@@ -103,6 +103,7 @@ function setBodyState(state, role) {
 
 auth.onAuthStateChanged(async (user) => {
   stopDataSync();
+  if (typeof resetNotifications === "function") resetNotifications();
   currentUser = user;
   currentRole = null;
   if (!user) {

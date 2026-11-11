@@ -280,6 +280,7 @@ window.cancelAppointment = async (id) => {
   if (!confirm("Cancelar este agendamento? O horário será liberado.")) return;
   const appt = findById(appData.appointments, id);
   if (!appt) return;
+  if (currentRole === "owner") markLocalAction("x" + appt.id);
   try {
     await cancelAppointmentRemote(appt);
     showToast("Agendamento cancelado. Horário liberado.");
@@ -365,7 +366,9 @@ $("bookingForm").addEventListener("submit", async (e) => {
     serviceId: Number(serviceId),
     date,
     time,
-    status: "scheduled"
+    status: "scheduled",
+    createdAt: Date.now(),
+    createdByUid: currentUser.uid
   };
 
   // abre a aba agora (gesto do clique) para ir direto ao WhatsApp após confirmar
@@ -936,6 +939,7 @@ function topEntries(qtyMap, limit = 5) {
 }
 
 function renderDashboard() {
+  renderTodayPanel();
   const { productRev, serviceRev, total, productQty, serviceQty } = aggregateSales(appData.sales);
   const completedAppts = appData.appointments.filter((a) => a.status === "completed").length;
 
@@ -1041,6 +1045,7 @@ function renderAll() {
   renderClientArea();
   renderReservations();
   fillBarberSelect($("reportBarber"), true, "Todos");
+  if (typeof checkNewActivity === "function") checkNewActivity();
   const activePage = document.querySelector(".page.active");
   if (activePage?.id === "dashboard") renderDashboard();
   if (activePage?.id === "relatorios") renderReports();
@@ -1182,3 +1187,27 @@ window.cancelReservationOwner = (id) => {
   saveData();
   showToast("Reserva cancelada.");
 };
+
+/* --- Agenda de hoje (dashboard) --- */
+function renderTodayPanel() {
+  const today = todayISO();
+  const items = appData.appointments
+    .filter((a) => a.date === today && a.status !== "cancelled")
+    .sort((x, y) => x.time.localeCompare(y.time));
+  $("dashTodayHint").textContent = items.length ? `${items.length} atendimento(s) hoje` : "Sem atendimentos hoje";
+  $("dashToday").innerHTML = items.length
+    ? items
+        .map((a) => {
+          const client = findById(appData.clients, a.clientId);
+          const service = findById(appData.services, a.serviceId);
+          const barber = findById(appData.barbers, a.barberId);
+          return `<article class="booking">
+            <time>${escapeHTML(a.time)}</time><i class="color-bar"></i>
+            <div><strong>${escapeHTML(client?.name || "Cliente")}</strong>
+              <small>${escapeHTML(service?.name || "—")} · ${escapeHTML(barber?.name || "—")}</small></div>
+            <span class="status-badge ${a.status}">${a.status === "completed" ? "Concluído" : "Agendado"}</span>
+          </article>`;
+        })
+        .join("")
+    : '<div class="empty">Nenhum atendimento para hoje.</div>';
+}
