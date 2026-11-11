@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VS Studio — gestão de barbearia">
+  <title>VS Studio | Gestão de Barbearia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="state-loading">
+  <!-- Login -->
+  <section id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <div class="brand-icon">VS</div>
+      <h1>VS <span>STUDIO</span></h1>
+      <p class="login-sub">Acesse para agendar ou gerenciar a barbearia</p>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-mode="login">Entrar</button>
+        <button type="button" class="auth-tab" data-mode="signup">Criar conta</button>
+      </div>
+      <form id="loginForm" class="auth-form">
+        <label>E-mail<input id="loginEmail" type="email" autocomplete="email" required></label>
+        <label>Senha<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+        <button type="submit" class="primary-button">Entrar</button>
+        <button type="button" class="link-button" id="resetPassword">Esqueci minha senha</button>
+      </form>
+      <form id="signupForm" class="auth-form hidden">
+        <label>Nome<input id="signupName" autocomplete="name" required></label>
+        <label>WhatsApp<input id="signupPhone" type="tel" autocomplete="tel" placeholder="(11) 99999-9999" required></label>
+        <label>E-mail<input id="signupEmail" type="email" autocomplete="email" required></label>
+        <label>Senha<input id="signupPassword" type="password" autocomplete="new-password" minlength="6" required></label>
+        <button type="submit" class="primary-button">Criar conta de cliente</button>
+      </form>
+      <p class="auth-message" id="authError" role="alert"></p>
+      <button type="button" class="secondary-button" id="googleLogin">Continuar com Google</button>
+    </div>
+  </section>
+
+  <!-- Área do cliente -->
+  <div id="clientArea" class="client-area">
+    <header class="client-top">
+      <div class="brand-icon">VS</div>
+      <strong id="clientGreeting">Olá!</strong>
+      <button type="button" class="secondary-button logout-button">Sair</button>
+    </header>
+    <div class="client-content">
+      <div class="page-heading">
+        <div><small>MEUS HORÁRIOS</small><h1>Agendamentos</h1></div>
+        <button type="button" class="primary-button" id="openClientBooking">＋ Agendar horário</button>
+      </div>
+      <div class="panel"><div class="panel-header"><h2>Próximos</h2></div><div id="clientUpcoming"></div></div>
+      <div class="panel"><div class="panel-header"><div><h2>Produtos</h2><p>Reserve e retire na barbearia.</p></div></div><div id="clientProducts" class="shop-grid"></div></div>
+      <div class="panel"><div class="panel-header"><h2>Minhas reservas</h2></div><div id="clientReservations"></div></div>
+      <div class="panel"><div class="panel-header"><h2>Histórico</h2></div><div id="clientPast"></div></div>
+      <div class="panel"><div class="panel-header"><h2>Nossa equipe</h2></div><div id="clientTeam" class="team-grid"></div></div>
+    </div>
+  </div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-icon">VS</div> 
+      <div>
+        <strong>VS <span>STUDIO</span></strong>
+        <small>BARBEARIA</small>
+      </div>
+      <button type="button" class="close-menu" id="closeMenu" aria-label="Fechar menu">&times;</button>
+    </div>
+    <nav>
+      <p>PRINCIPAL</p>
+      <button type="button" class="nav-item active" data-page="dashboard"><span class="nav-icon">◈</span> Dashboard</button>
+      <button type="button" class="nav-item" data-page="agenda"><span class="nav-icon">▣</span> Agenda</button>
+      <button type="button" class="nav-item" data-page="vendas"><span class="nav-icon">$</span> Vendas</button>
+      <button type="button" class="nav-item" data-page="reservas"><span class="nav-icon">◉</span> Reservas</button>
+      <p>CADASTROS</p>
+      <button type="button" class="nav-item" data-page="barbeiros"><span class="nav-icon">✂</span> Barbeiros</button>
+      <button type="button" class="nav-item" data-page="catalogo"><span class="nav-icon">▦</span> Produtos & Serviços</button>
+      <button type="button" class="nav-item" data-page="clientes"><span class="nav-icon">♙</span> Clientes</button>
+      <p>ANÁLISE</p>
+      <button type="button" class="nav-item" data-page="relatorios"><span class="nav-icon">◫</span> Relatórios</button>
+    </nav>
+    <div class="shop-profile">
+      <div class="avatar">VS</div>
+      <div><strong id="shopUserName">VS Studio</strong><small id="shopUserRole">Proprietário</small></div>
+      <button type="button" class="icon-button logout-button" title="Sair">⎋</button>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <main>
+    <header class="topbar">
+      <button type="button" class="menu-button" id="menuButton" aria-label="Abrir menu">☰</button>
+      <span id="currentDate"></span>
+      <div class="user">VS</div>
+    </header>
+
+    <div class="content">
+      <!-- Dashboard -->
+      <section class="page active" id="dashboard">
+        <div class="page-heading">
+          <div>
+            <small>PAINEL</small>
+            <h1>Dashboard</h1>
+            <p>Visão geral do faturamento e operação.</p>
+          </div>
+        </div>
+        <div class="stats stats-4">
+          <article><div class="stat-icon gold">$</div><div><span>Faturamento total</span><strong id="dashTotalRevenue">R$ 0</strong><small>Vendas registradas</small></div></article>
+          <article><div class="stat-icon gold-light">▦</div><div><span>Vendas de produtos</span><strong id="dashProductRevenue">R$ 0</strong><small>Receita de produtos</small></div></article>
+          <article><div class="stat-icon gold">✂</div><div><span>Receita de serviços</span><strong id="dashServiceRevenue">R$ 0</strong><small>Serviços vendidos</small></div></article>
+          <article><div class="stat-icon gold-light">▣</div><div><span>Atendimentos</span><strong id="dashAppointments">0</strong><small>Agendamentos concluídos</small></div></article>
+        </div>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-header"><h2>Produtos mais vendidos</h2></div>
+            <div id="dashTopProducts" class="rank-list"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h2>Serviços mais realizados</h2></div>
+            <div id="dashTopServices" class="rank-list"></div>
+          </div>
+        </div>
+        <div class="panel panel-alert">
+          <div class="panel-header"><h2>Alertas de estoque baixo</h2><p id="dashStockHint"></p></div>
+          <div id="dashLowStock"></div>
+        </div>
+      </section>
+
+      <!-- Agenda -->
+      <section class="page" id="agenda">
+        <div class="page-heading">
+          <div>
+            <small>AGENDA</small>
+            <h1>Agendamentos</h1>
+            <p>Calendário, horários disponíveis e atendimentos do dia.</p>
+          </div>
+          <button type="button" class="primary-button" id="openBooking">＋ Novo agendamento</button>
+        </div>
+        <div class="agenda-layout">
+          <div class="panel calendar-panel">
+            <div class="panel-header">
+              <button type="button" class="ghost-button" id="calPrev" aria-label="Mês anterior">‹</button>
+              <h2 id="calTitle">—</h2>
+              <button type="button" class="ghost-button" id="calNext" aria-label="Próximo mês">›</button>
+            </div>
+            <div class="calendar-weekdays">
+              <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div><h2 id="agendaDayTitle">Agenda do dia</h2><p id="agendaSelectedDate"></p></div>
+              <div class="search"><span>⌕</span><input id="bookingSearch" placeholder="Buscar cliente ou serviço"></div>
+            </div>
+            <div id="bookingList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Vendas -->
+      <section class="page" id="vendas">
+        <div class="page-heading">
+          <div>
+            <small>CAIXA</small>
+            <h1>Vendas</h1>
+            <p>Registre vendas de produtos e serviços com baixa automática de estoque.</p>
+          </div>
+          <button type="button" class="primary-button" id="openSale">＋ Nova venda</button>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h2>Histórico de vendas</h2></div>
+          <div id="saleList"></div>
+        </div>
+      </section>
+
+      <!-- Reservas -->
+      <section class="page" id="reservas">
+        <div class="page-heading">
+          <div>
+            <small>RETIRADAS</small>
+            <h1>Reservas de produtos</h1>
+            <p>Pedidos dos clientes para retirar na barbearia. Ao marcar como entregue, a venda é lançada e o estoque baixa.</p>
+          </div>
+        </div>
+        <div class="panel"><div id="reservationList"></div></div>
+      </section>
+
+      <!-- Barbeiros -->
+      <section class="page" id="barbeiros">
+        <div class="page-heading">
+          <div>
+            <small>EQUIPE</small>
+            <h1>Barbeiros</h1>
+            <p>Cadastre, edite e gerencie os profissionais.</p>
+          </div>
+          <button type="button" class="primary-button" id="openBarber">＋ Novo barbeiro</button>
+        </div>
+        <div class="barber-grid" id="barberList"></div>
+      </section>
+
+      <!-- Catálogo -->
+      <section class="page" id="catalogo">
+        <div class="page-heading">
+          <div>
+            <small>CATÁLOGO</small>
+            <h1>Produtos & Serviços</h1>
+            <p>Preços, duração e controle de estoque.</p>
+          </div>
+          <button type="button" class="primary-button" id="openItem">＋ Adicionar</button>
+        </div>
+        <div class="tabs">
+          <button type="button" class="tab active" data-tab="servicesTab">Serviços</button>
+          <button type="button" class="tab" data-tab="productsTab">Produtos</button>
+        </div>
+        <div class="tab-content active" id="servicesTab">
+          <div class="service-grid" id="serviceList"></div>
+        </div>
+        <div class="tab-content" id="productsTab">
+          <div class="products-table">
+            <div class="table-header"><span>PRODUTO</span><span>ESTOQUE</span><span>PREÇO</span><span>AÇÕES</span></div>
+            <div id="productList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Clientes -->
+      <section class="page" id="clientes">
+        <div class="page-heading">
+          <div>
+            <small>CLIENTES</small>
+            <h1>Clientes</h1>
+            <p>Cadastro para agendamentos e vendas.</p>
+          </div>
+          <button type="button" class="primary-button" id="openClient">＋ Novo cliente</button>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Clientes cadastrados</h2>
+            <div class="search"><span>⌕</span><input id="clientSearch" placeholder="Buscar cliente"></div>
+          </div>
+          <div id="clientList"></div>
+        </div>
+      </section>
+
+      <!-- Relatórios -->
+      <section class="page" id="relatorios">
+        <div class="page-heading">
+          <div>
+            <small>DESEMPENHO</small>
+            <h1>Relatórios</h1>
+            <p>Filtre por período e barbeiro.</p>
+          </div>
+        </div>
+        <div class="panel filters-panel">
+          <form id="reportFilters" class="filters-form">
+            <label>Data inicial<input type="date" id="reportStart" required></label>
+            <label>Data final<input type="date" id="reportEnd" required></label>
+            <label>Barbeiro
+              <select id="reportBarber">
+                <option value="">Todos</option>
+              </select>
+            </label>
+            <button type="submit" class="primary-button">Aplicar filtros</button>
+          </form>
+        </div>
+        <div class="stats stats-4">
+          <article><span>Faturamento no período</span><strong id="repRevenue">R$ 0</strong></article>
+          <article><span>Produtos</span><strong id="repProducts">R$ 0</strong></article>
+          <article><span>Serviços</span><strong id="repServices">R$ 0</strong></article>
+          <article><span>Agendamentos</span><strong id="repAppointments">0</strong></article>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h2>Detalhamento de vendas</h2></div>
+          <div id="reportSaleList"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Modal: Agendamento -->
+  <div class="modal" id="bookingModal" role="dialog" aria-labelledby="bookingModalTitle">
+    <div class="modal-box modal-wide">
+      <button type="button" class="modal-close" data-close="bookingModal" aria-label="Fechar">&times;</button>
+      <h2 id="bookingModalTitle">Novo agendamento</h2>
+      <form id="bookingForm" novalidate>
+        <label id="bookingClientLabel">Cliente<span class="field-error" data-for="bookingClient"></span>
+          <select id="bookingClient" required></select>
+        </label>
+        <label>Barbeiro<span class="field-error" data-for="bookingBarber"></span>
+          <select id="bookingBarber" required></select>
+        </label>
+        <label>Serviço<span class="field-error" data-for="bookingService"></span>
+          <select id="bookingService" required></select>
+        </label>
+        <label>Data<span class="field-error" data-for="bookingDate"></span>
+          <input type="date" id="bookingDate" required>
+        </label>
+        <div class="full">
+          <span class="label-text">Horário disponível<span class="field-error" data-for="bookingTime"></span></span>
+          <div id="timeSlots" class="time-slots"></div>
+          <input type="hidden" id="bookingTime" required>
+        </div>
+        <button type="submit" class="primary-button full">Confirmar agendamento</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Barbeiro -->
+  <div class="modal" id="barberModal" role="dialog">
+    <div class="modal-box">
+      <button type="button" class="modal-close" data-close="barberModal">&times;</button>
+      <h2 id="barberModalTitle">Novo barbeiro</h2>
+      <form id="barberForm" novalidate>
+        <input type="hidden" id="barberId">
+        <label>Nome<span class="field-error" data-for="barberName"></span>
+          <input id="barberName" required minlength="2" placeholder="Nome completo">
+        </label>
+        <label>Telefone<span class="field-error" data-for="barberPhone"></span>
+          <input id="barberPhone" required placeholder="(11) 99999-9999">
+        </label>
+        <div class="full photo-field">
+          <span class="label-text">Foto</span>
+          <div class="photo-row">
+            <img id="barberPhotoPreview" class="photo-preview hidden" alt="Prévia da foto">
+            <input type="file" id="barberPhoto" accept="image/*">
+            <button type="button" class="link-button" id="barberPhotoRemove">Remover foto</button>
+          </div>
+        </div>
+        <button type="submit" class="primary-button full">Salvar barbeiro</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Item (produto/serviço) -->
+  <div class="modal" id="itemModal" role="dialog">
+    <div class="modal-box">
+      <button type="button" class="modal-close" data-close="itemModal">&times;</button>
+      <h2 id="itemModalTitle">Adicionar item</h2>
+      <form id="itemForm" novalidate>
+        <input type="hidden" id="itemId">
+        <label>Tipo
+          <select id="itemType">
+            <option value="service">Serviço</option>
+            <option value="product">Produto</option>
+          </select>
+        </label>
+        <label>Nome<span class="field-error" data-for="itemName"></span>
+          <input id="itemName" required minlength="2" placeholder="Nome">
+        </label>
+        <label id="descLabel"><span id="itemDescLabelText">Descrição</span><span class="field-error" data-for="itemDescription"></span>
+          <input id="itemDescription" required placeholder="Descrição ou marca">
+        </label>
+        <label>Preço (R$)<span class="field-error" data-for="itemPrice"></span>
+          <input id="itemPrice" type="number" min="0.01" step="0.01" required placeholder="0,00">
+        </label>
+        <label id="durationField">Duração (minutos)<span class="field-error" data-for="itemDuration"></span>
+          <input id="itemDuration" type="number" min="5" step="5" value="30" placeholder="30">
+        </label>
+        <label id="stockField" class="hidden">Estoque<span class="field-error" data-for="itemStock"></span>
+          <input id="itemStock" type="number" min="0" step="1" value="0">
+        </label>
+        <div class="full photo-field" id="photoField">
+          <span class="label-text">Foto</span>
+          <div class="photo-row">
+            <img id="itemPhotoPreview" class="photo-preview hidden" alt="Prévia da foto">
+            <input type="file" id="itemPhoto" accept="image/*">
+            <button type="button" class="link-button" id="itemPhotoRemove">Remover foto</button>
+          </div>
+        </div>
+        <button type="submit" class="primary-button full">Salvar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Cliente -->
+  <div class="modal" id="clientModal" role="dialog">
+    <div class="modal-box">
+      <button type="button" class="modal-close" data-close="clientModal">&times;</button>
+      <h2 id="clientModalTitle">Novo cliente</h2>
+      <form id="clientForm" novalidate>
+        <input type="hidden" id="clientId">
+        <label>Nome<span class="field-error" data-for="clientName"></span>
+          <input id="clientName" required minlength="2" placeholder="Nome completo">
+        </label>
+        <label>Telefone<span class="field-error" data-for="clientPhone"></span>
+          <input id="clientPhone" required placeholder="(11) 99999-9999">
+        </label>
+        <label>E-mail<span class="field-error" data-for="clientEmail"></span>
+          <input id="clientEmail" type="email" placeholder="cliente@email.com">
+        </label>
+        <button type="submit" class="primary-button full">Salvar cliente</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Venda -->
+  <div class="modal" id="saleModal" role="dialog">
+    <div class="modal-box modal-wide">
+      <button type="button" class="modal-close" data-close="saleModal">&times;</button>
+      <h2>Nova venda</h2>
+      <form id="saleForm" novalidate>
+        <label>Cliente (opcional)
+          <select id="saleClient"><option value="">— Sem cliente —</option></select>
+        </label>
+        <label>Barbeiro (opcional)
+          <select id="saleBarber"><option value="">— Não informado —</option></select>
+        </label>
+        <label>Data<span class="field-error" data-for="saleDate"></span>
+          <input type="date" id="saleDate" required>
+        </label>
+        <div class="full sale-lines">
+          <span class="label-text">Itens da venda</span>
+          <div id="saleLines"></div>
+          <button type="button" class="secondary-button" id="addSaleLine">＋ Adicionar item</button>
+          <p class="field-error" data-for="saleLines"></p>
+        </div>
+        <p class="sale-total full">Total: <strong id="saleTotalPreview">R$ 0,00</strong></p>
+        <button type="submit" class="primary-button full">Registrar venda</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmação -->
+  <div class="modal" id="confirmModal" role="dialog">
+    <div class="modal-box">
+      <button type="button" class="modal-close" data-close="confirmModal">&times;</button>
+      <h2>Agendamento confirmado ✓</h2>
+      <p id="confirmSummary"></p>
+      <div class="confirm-actions">
+        <a id="confirmWhats" class="primary-button" target="_blank" rel="noopener">Enviar no WhatsApp</a>
+        <button type="button" class="secondary-button" id="confirmIcs">Adicionar ao calendário do celular</button>
+        <a id="confirmGoogle" class="secondary-button" target="_blank" rel="noopener">Adicionar ao Google Agenda</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/scheduler.js"></script>
+  <script src="js/integrations.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    // Dono = quem tem um documento em owners/{uid} (criado manualmente no Console)
+    function isOwner() {
+      return signedIn() && exists(/databases/$(database)/documents/owners/$(request.auth.uid));
+    }
+
+    match /owners/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /barbers/{id}  { allow read: if signedIn(); allow write: if isOwner(); }
+    match /services/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+    match /products/{id} { allow read: if signedIn(); allow write: if isOwner(); }
+    match /sales/{id}    { allow read, write: if isOwner(); }
+
+    match /clients/{id} {
+      allow read: if isOwner() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create: if isOwner() || (signedIn() && request.resource.data.uid == request.auth.uid);
+      allow update: if isOwner() || (signedIn() && resource.data.uid == request.auth.uid
+                                      && request.resource.data.uid == request.auth.uid);
+      allow delete: if isOwner();
+    }
+
+    match /appointments/{id} {
+      allow read: if isOwner() || (signedIn() && resource.data.clientUid == request.auth.uid);
+      allow create: if isOwner() || (signedIn() && request.resource.data.clientUid == request.auth.uid
+                                      && request.resource.data.status == 'scheduled');
+      // cliente só pode cancelar o próprio horário
+      allow update: if isOwner() || (signedIn() && resource.data.clientUid == request.auth.uid
+                                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+                                      && request.resource.data.status == 'cancelled');
+      allow delete: if isOwner();
+    }
+
+    // Reservas de produtos (cliente reserva e pode cancelar; dono gerencia)
+    match /reservations/{id} {
+      allow read: if isOwner() || (signedIn() && resource.data.clientUid == request.auth.uid);
+      allow create: if isOwner() || (signedIn() && request.resource.data.clientUid == request.auth.uid
+                                      && request.resource.data.status == 'reserved');
+      allow update: if isOwner() || (signedIn() && resource.data.clientUid == request.auth.uid
+                                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+                                      && request.resource.data.status == 'cancelled');
+      allow delete: if isOwner();
+    }
+
+    // Bloqueios de horário: sem dados pessoais, servem para evitar dois agendamentos no mesmo horário
+    match /locks/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow delete: if isOwner() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+  }
+}
